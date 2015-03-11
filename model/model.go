@@ -33,7 +33,7 @@ func GenDummyData(fp string) {
 	defer f.Close()
 
 	rand.Seed(time.Now().UnixNano())
-	for i := 0; i < NUM_RECORDS*50; i++ { //write player data for 60 games
+	for i := 0; i < NUM_RECORDS*25; i++ { //write player data for 25 games
 		s := ""
 		for j := 0; j < 5; j++ {
 			x := rand.Float64()*float64(state.WIDTH)
