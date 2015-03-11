@@ -3,22 +3,82 @@ package model
 import (
 	"fmt"
 	"os"
-	"bball-graph/src/state"
 	"math/rand"
 	"time"
 	"strconv"
+	"bufio"
+	"strings"
+	"bball-graph/src/state"
 )
 
 const (
 	NUM_RECORDS = 48*25*60 //25 records per second
 )
 
-var m map[uint32]uint32
+type Pair struct {
+	state	uint32
+	p		float64
+}
+
+var m map[uint32][]uint32
 
 func Import(fp string) {
-	//for each line in file:
-		//read into array A
 
+	f, err := os.Open(fp)
+	if err != nil {
+		fmt.Println("Error:", err)
+		return
+	}
+	defer f.Close()
+
+	var prevState uint32
+	m = make(map[uint32][]uint32)
+
+	scanner := bufio.NewScanner(f)
+	scanner.Split(bufio.ScanLines) 
+	for scanner.Scan() {
+		a := strings.Split(scanner.Text(), ",")
+		p1 :=  state.EnPlayerState(false, toFloat64(a[0]), toFloat64(a[1]))
+		p2 :=  state.EnPlayerState(false, toFloat64(a[2]), toFloat64(a[3]))
+		p3 :=  state.EnPlayerState(false, toFloat64(a[4]), toFloat64(a[5]))
+		p4 :=  state.EnPlayerState(false, toFloat64(a[6]), toFloat64(a[7]))
+		p5 :=  state.EnPlayerState(false, toFloat64(a[8]), toFloat64(a[9]))
+		s := state.EnCourtState(p1, p2, p3, p4, p5)
+		//fmt.Println(s)
+		//state.PrintBinary(s, true)
+		fmt.Println(prevState)
+		break
+		if prevState != 0 {
+			//technically a valid state but implies that
+			//everyone is top left corner and no one has ball
+			addState(prevState, s)
+		}
+		prevState = s
+	}
+
+}
+
+func addState(prevState, currState uint32) {
+
+	if val, ok := m[prevState]; ok {
+		//TODO:something useful
+		fmt.Println(val)
+		return
+
+	} else {
+		//TODO:something useful
+		return
+	}
+
+}
+
+func toFloat64(s string) float64 {
+	u, err := strconv.ParseFloat(s, 64)
+	if err != nil {
+		panic("error converting %s to float64.")
+		return 0
+	}
+	return u
 }
 
 func GenDummyData(fp string) {
