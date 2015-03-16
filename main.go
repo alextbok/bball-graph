@@ -9,6 +9,6 @@ import (
 func main() {
 
 	//test.TestStateCodec()
-	//model.GenDummyData("data.csv")
+	//model.SmartGenDummyData("data.csv")
 	model.Import("data.csv")
 }
