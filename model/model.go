@@ -71,8 +71,7 @@ func Import(fp string) {
 	//for k, _ := range m {
 	//	fmt.Printf("%v: %v\n", k, draw(k))
 	//}
-	//fmt.Println(alias)
-	fmt.Println(m)
+	fmt.Println(alias)
 }
 
 func addState(prevState, currState uint32) {
@@ -273,6 +272,7 @@ func initAlias(key uint32, a map[uint32]float64) {
 		} else {
 			larger = append(larger, i)
 		}
+		i += 1
 	}
 
 	s := len(smaller) - 1
