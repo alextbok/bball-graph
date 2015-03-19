@@ -1,4 +1,4 @@
-package model
+package naive_model
 
 import (
 	"fmt"
@@ -16,20 +16,10 @@ const (
 	NUM_RECORDS = 48*25*60 //25 records per second
 )
 
-/*
-type Pair struct {
-	state	uint32
-	p		float64
-}
-*/
-var m			map[uint32]map[uint32]float64
-var alias		map[uint32][]uint32
-var prob		map[uint32][]float64
+var m	map[uint32]map[uint32]uint32
 
 func init() {
-	m = make(map[uint32]map[uint32]float64)
-	alias = make(map[uint32][]uint32)
-	prob = make(map[uint32][]float64)
+	m = make(map[uint32]map[uint32]uint32)
 	rand.Seed(time.Now().UnixNano())
 }
 
@@ -37,7 +27,7 @@ func Import(fp string) {
 
 	f, err := os.Open(fp)
 	if err != nil {
-		fmt.Println("Error:", err)
+		fmt.Println("Error", err)
 		return
 	}
 	defer f.Close()
@@ -62,29 +52,13 @@ func Import(fp string) {
 		}
 		prevState = s
 	}
+
 	KEY := uint32(739431240)
 	fmt.Println(m[KEY])
-	for k, v := range(m) {
-		initAlias(k, v)
-	}
-	//fmt.Println(len(m))
-	//fmt.Println(len(alias))
-	//for k, _ := range m {
-	//	fmt.Printf("%v: %v\n", k, draw(k))
-	//}
-	
-	//for k, v := range alias {
-	//	if len(v) > 5 {
-	//		fmt.Println(k)
-	//	}
-	//}
-	fmt.Println(m[KEY])
-	fmt.Println(alias[KEY])
-	fmt.Println(prob[KEY])
 	outcomes := make(map[uint32]float64)
 	ITER := 10000000.0
 	for i := 0.0; i < ITER; i++ {
-		o := draw(KEY)
+		o := choose(KEY)
 		if _, ok := outcomes[o]; ok {
 			outcomes[o] += 1.0
 		} else {
@@ -112,7 +86,7 @@ func addState(prevState, currState uint32) {
 
 	} else {
 		//the previous state has not been indexed yet
-		m[prevState] = make(map[uint32]float64)
+		m[prevState] = make(map[uint32]uint32)
 		m[prevState][currState] = 1
 	}
 
@@ -267,112 +241,25 @@ func SmartGenDummyData(fp string) {
 	}
 }
 
+//performs selection over probability distribution in O(n)
+//may not be so bad if state arrays end up small
+//may even be better if above condition is met, 
+//since there is no initial generation cost
+func choose(key uint32) uint32 {
 
-/*
- * http://www.keithschwarz.com/darts-dice-coins/
- */
-func initAlias(key uint32, a map[uint32]float64) {
-
-	K := len(a)
-	alias[key] = make([]uint32, K)
-	prob[key] = make([]float64, K)
-	p := make([]float64, K)
-
-	total := 0.0
-	for _, v := range a {
+	total := uint32(0)
+	a := make([]uint32, len(m[key]))
+	a_k := make([]uint32, len(m[key]))
+	for k, v := range m[key] {
 		total += v
+		a = append(a, total)
+		a_k = append(a_k, k)
 	}
-	for k, _ := range a {
-		a[k] = ( a[k] / total )
-	}
-
-	smaller := make([]uint32, K)
-	larger := make([]uint32, K)
-
-	i := uint32(0)
-	for _, v := range a {
-
-		p[i] = ( v * float64(K) )
-		
-		if p[i] < 1.0 {
-			smaller = append(smaller, i)
-		} else {
-			larger = append(larger, i)
+	r := rand.Intn(int(total))
+	for i := 0; i < len(a); i++ {
+		if r < int(a[i]) {
+			return a_k[i]
 		}
-		i += 1
 	}
-
-	s := len(smaller) - 1
-	l := len(larger) - 1
-	var small uint32
-	var large uint32
-	for s >= 0 && l >= 0 {
-		small = smaller[s]
-		large = larger[l]
-		s = s - 1
-		l = l - 1
-
-		prob[key][small] = p[small]
-		alias[key][small] = large
-
-		p[large] = ( p[large] + p[small] ) - 1.0
-
-		if p[large] < 1.0 {
-			s += 1
-			smaller[s] = large
-		} else {
-			l += 1
-			larger[l] = large
-		}
-
-	}
-
-	for i = 0; l >= 0; i++ {
-		prob[key][larger[i]] = 1
-		l = l - 1
-	}
-	for i = 0; s >= 0; i++ {
-		prob[key][smaller[i]] = 1
-		s = s - 1
-	}
+	return a_k[0]
 }
-
-func draw(key uint32) uint32 {
-	i := rand.Intn(len(alias[key]))
-	h := rand.Float64()
-	if h <= prob[key][i] {
-		return get(key, uint32(i))
-	}
-	return get(key, alias[key][i])
-}
-
-func get(key uint32, i uint32) uint32 {
-
-	idx := uint32(0)
-	for k, _ := range(m[key]) {
-		if idx == i {
-			return k
-		}
-		idx += 1
-	}
-	return i
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

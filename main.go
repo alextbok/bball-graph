@@ -2,11 +2,12 @@ package main
 
 import (
 	"bball-graph/src/model"
+	"bball-graph/src/naive_model"
 	"bball-graph/src/test"
 	"flag"
 )
 
-var tester, gen, load bool
+var tester, gen, load, naive bool
 var file string
 func init() {
 
@@ -14,6 +15,7 @@ func init() {
 	flag.BoolVar(&gen, "gen", false, "generate dummy data")
 	flag.BoolVar(&load, "load", false, "load into model")
 	flag.StringVar(&file, "file", "", "file to load")
+	flag.BoolVar(&naive, "naive", false, "load into naive model")
 
 }
 
@@ -29,9 +31,17 @@ func main() {
 	}
 	if load {
 		if file != "" {
-			model.Import(file)
+			imp(naive, file)
 		} else {
-			model.Import("data.csv")
+			imp(naive, "data.csv")
 		}
+	}
+}
+
+func imp(naive bool, file string) {
+	if naive {
+		naive_model.Import(file)
+	} else {
+		model.Import(file)
 	}
 }
